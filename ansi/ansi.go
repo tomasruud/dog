@@ -93,15 +93,27 @@ func (e Encoder) escape(c color.Color, bg bool) string {
 
 // rgb compiles rgba colors on a predefined background color.
 // Based on the algorithm suggested here https://stackoverflow.com/a/746937/738608
-func (e Encoder) rgb(c color.Color) (r, g, b uint8) {
+func (e Encoder) rgb(c color.Color) (uint8, uint8, uint8) {
 	or, og, ob, oa := c.RGBA()
 	mr, mg, mb, _ := e.matte().RGBA()
 
 	alpha := float32(oa>>8) / 255
 
-	r = uint8(alpha*float32(or>>8) + (1-alpha)*float32(mr>>8))
-	g = uint8(alpha*float32(og>>8) + (1-alpha)*float32(mg>>8))
-	b = uint8(alpha*float32(ob>>8) + (1-alpha)*float32(mb>>8))
+	rr := clip(alpha*float32(or>>8) + (1-alpha)*float32(mr>>8))
+	rg := clip(alpha*float32(og>>8) + (1-alpha)*float32(mg>>8))
+	rb := clip(alpha*float32(ob>>8) + (1-alpha)*float32(mb>>8))
 
-	return r, g, b
+	return uint8(rr), uint8(rg), uint8(rb)
+}
+
+func clip(n float32) float32 {
+	if n > 255 {
+		return 255
+	}
+
+	if n < 0 {
+		return 0
+	}
+
+	return n
 }
